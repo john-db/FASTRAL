@@ -10,7 +10,7 @@ import os
 
 class gtSampler (object):
 
-    def __init__(self, nTree, nSample, k, replacement = True, missingID = None):
+    def __init__(self, nTree, nSample, k, seed, replacement = True, missingID = None):
         """
         nTree and nSample are assumed to be a python list
         """
@@ -19,6 +19,7 @@ class gtSampler (object):
         self.replacement = replacement
         self.k = k
         self.misID = missingID
+        self.seed = seed
         if isinstance(missingID, np.ndarray):
             self.compID = np.setdiff1d(range(k),missingID, True)
 
@@ -28,6 +29,8 @@ class gtSampler (object):
         path_write: path to the ouput directory were sampled trees will be written
         """
         last_ID = 0
+        if self.seed != None:
+            np.random.seed(self.seed)
         for curr_nSample, curr_nTree in zip (self.nSample, self.nTree):
             self._sample(curr_nSample, curr_nTree, last_ID, path_read, path_write)
             last_ID += curr_nSample
