@@ -17,7 +17,6 @@ import platform
 
 
 
-
 def main():
     #find OS
     if platform.system() == "Darwin":
@@ -39,18 +38,22 @@ def main():
     parser.add_argument('--o', type=str, default=None, help='path to write FASTRAL output species tree', required = True)
     parser.add_argument('--time', type=str, default=None, help='path to write running times', required = True)
     parser.add_argument('--rep', action='store_true', help='whether draw samples with replacement | Default: False', required = False)
-    parser.add_argument('--path_ASTRID', type=str, default=sitePackages + '/FASTRAL/ASTRID/ASTRID-'+sys, help='path to ASTRID | Default: ASTRID-2 (version untagged-fdc5326080d364b87c5a) is used (see: https://github.com/pranjalv123/ASTRID/releases/tag/untagged-fdc5326080d364b87c5a)', required = False)
+    parser.add_argument('--method', type=str, default='ASTRID-2', help='Summary method to be used on sampled gene trees. Use "--path_method" to specify the executable for the method. | Default: ASTRID-2', choices=['ASTRID-2', 'TREE-QMC', 'ASTEROID'])
+    parser.add_argument('--path_method', type=str, default=sitePackages + '/FASTRAL/ASTRID/ASTRID-'+sys, help='path to summary method to be used on sampled gene trees | Default: ASTRID-2 (version untagged-fdc5326080d364b87c5a) is used (see: https://github.com/pranjalv123/ASTRID/releases/tag/untagged-fdc5326080d364b87c5a)', required = False)
     parser.add_argument('--path_ASTRAL', type=str, default=sitePackages + '/FASTRAL/ASTRAL-modified/astral.5.7.3.modified.jar', help='path to ASTRAL | Default: modified ASTRAL 5.7.3 is used', required = False)
     parser.add_argument('--heuristics', type=int, default=0, help='heuristics level of ASTRAL | Default: 0', required = False)
     parser.add_argument('--multi', type=str, default=None, help='if input gene trees contain multiple individuals, specify the path to the mapping file', required = False)
     parser.add_argument('--incomp_id', type=str, default=None, help='(Optional) Path to a file containing the IDs of incomplete gene trees. If specified, sampling step makes sure that each sub-sample contains complete gene trees.', required = False)
+    parser.add_argument('--seed', type=int, default=None, help='(Optional) Integer seed for numpy.random.seed() used in sampling gene trees.', required = False)
+    parser.add_argument('--mem', type=str, default=None, help='(Optional) Max heap size given to ASTRAL (e.g. use --mem 32G to java the flag -Xmx32G when running ASTRAL) | Default: None', required = False)
+    parser.add_argument('--branch_annotate', type=int, default=None, help='branch annotate (-t or --brand-annotate) flag given to ASTRAL (e.g. use --branch_annotate 0 to give astral the flag -t 0). See ASTRAL for details. | Default: 3, only the posterior probability for the main resolution.', required = False)
 
     FLAGS = parser.parse_args()
 
     if not os.path.exists(FLAGS.path_ASTRAL):
         warnings.warn("This is the first time you are using FASTRAL! Let's build dependencies...")
         # make executables:
-        f = Path(FLAGS.path_ASTRID)
+        f = Path(FLAGS.path_method)
         f.chmod(f.stat().st_mode | stat.S_IEXEC)
 
         # build dependencies
