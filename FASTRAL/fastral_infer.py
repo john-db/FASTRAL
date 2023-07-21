@@ -3,8 +3,8 @@
 """
 
 import argparse
-from FASTRAL.fastral import FASTRAL
-from FASTRAL.utils import make_dir
+from fastral import FASTRAL
+from utils import make_dir
 import os
 import warnings
 import subprocess
