@@ -5,7 +5,7 @@
 
 import numpy as np
 import shutil
-from FASTRAL.Sampler import gtSampler
+from Sampler import gtSampler
 import time
 import pandas as pd
 import os
@@ -34,7 +34,8 @@ class FASTRAL (object):
 
         self.multi = None
         if self.flags_.multi:
-            self.multi = ' -a {}'.format(self.flags_.multi)
+            # self.multi = ' -a {}'.format(self.flags_.multi)
+            self.multi = self.flags_.multi
 
         self.method = flags.method
 
@@ -65,20 +66,53 @@ class FASTRAL (object):
 
 
         if self.method == "ASTEROID":
+            if self.multi:
+                temp_filename = 'mapping_for_asteroid.temp'
+                with open(self.multi) as f:
+                    lines = f.read()
+                lines = lines.replace(',', ';')
+                temp_file = open(temp_filename, "w+")
+                temp_file.write(lines)
+                temp_file.close()
+
             for s in range(self.nTotalS_):
                 curr_cline = cline + str(s) + '/sampledGeneTrees'
 
-                curr_cline += ' -p ' + str(s)
+                if self.multi:
+                    curr_cline += ' -m ' + temp_filename
+
+                curr_cline += ' -p ' + self.path_samples + str(s) + '/' + str(s)
+
+                print("     Running " + self.method + " on sample " + str(s), flush=True)
+                status = os.system(curr_cline)
+                if status < 0:
+                    print("???")
+                    raise ValueError(self.method + ' was not run successfully')
+                else:
+                    if not os.path.exists(str(s) + '.bestTree.newick'):
+                        print("not 1")
+                    if not os.path.exists(self.path_samples + str(s) + '/'):
+                        print("not 2")
+                    os.system('mv ' + self.path_samples + str(s) + '/' + str(s) + '.bestTree.newick ' + self.path_samples + str(s) + '/' + self.method + '_species_tree_' + str(s))
+                    os.system('rm ' + self.path_samples + str(s) + '/' + str(s) + '.allTrees.newick')
+                    os.system('rm ' + self.path_samples + str(s) + '/' + str(s) + '.scores.txt')
+
+            if self.multi:
+                 os.system('rm ' + temp_filename)
+
+        elif self.method == "ASTRID-2":
+            for s in range(self.nTotalS_):
+                curr_cline = cline + str(s) + '/sampledGeneTrees'
+                if self.multi:
+                    curr_cline += ' -a ' + self.multi
+                
+                curr_cline += ' -o ' + self.path_samples + str(s) + '/' + self.method + '_species_tree_' + str(s) + ' -u -n -s'
 
                 print("     Running " + self.method + " on sample " + str(s), flush=True)
                 status = os.system(curr_cline)
                 if status < 0:
                     raise ValueError(self.method + ' was not run successfully')
-                else:
-                    os.system('mv ' + str(s) + '.bestTree.newick ' + self.path_samples + str(s) + '/' + self.method + '_species_tree_' + str(s))
-                    os.system('rm ' + str(s) + '.allTrees.newick')
-                    os.system('rm ' + str(s) + '.scores.txt')
-        elif self.method == "ASTRID-2" or self.method == "TREE-QMC":
+        elif self.method == "TREE-QMC":
             for s in range(self.nTotalS_):
                 curr_cline = cline + str(s) + '/sampledGeneTrees'
                 if self.multi:
@@ -111,7 +145,7 @@ class FASTRAL (object):
         if self.flags_.branch_annotate != None:
             cline += ' -t ' + str(self.flags_.branch_annotate)
         if self.multi:
-            cline += self.multi
+            cline += ' -a ' + self.multi
         print("START RUNNING ASTRAL ... ", flush=True)
         status = os.system(cline)
         if status < 0:
